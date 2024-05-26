@@ -2,9 +2,11 @@ from fastapi import FastAPI, HTTPException, Request
 from starlette import status
 
 app = FastAPI()
+
 @app.get("/")
 def read_root():
     return {"message": "Hello World"}
+
 @app.post("/login")
 async def login(request: Request):
     payload = await request.json()
