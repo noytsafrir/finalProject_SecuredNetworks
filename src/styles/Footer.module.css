@@ -1,0 +1,35 @@
+/* Footer.module.css */
+
+/* Your CSS styles */
+
+.line-container {
+  position: relative;
+  
+}
+
+.line {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  border-bottom: 2px solid #cbc8c8; /* 2px solid line with color #cbc8c8 */
+  width: 20%; /* 20% of the page's length */
+  
+}
+
+
+
+.footer {
+  font-size: 15px;
+  margin-top: 15px;
+  text-align: center;
+  font-family: 'YourChosenFont', sans-serif; /* Apply the custom font */
+  background-color: #f0f0f0; /* Choose your preferred background color */
+
+
+  
+}
+
+.footer a {
+  color: #9f9b9bc2;
+  text-decoration: none;
+}

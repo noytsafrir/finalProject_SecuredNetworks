@@ -1,0 +1,37 @@
+/* Navbar.module.css */
+
+.navbar {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #ff99cc; /* Soft pink background color */
+    border-radius: 10px; /* Rounded corners */
+
+}
+  
+  .navbar li {
+    float: left;
+  }
+  
+  .navbar a {
+    display: block;
+    color: #663366; /* Deep purple text color */
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    border-radius: 10px; /* Rounded corners */
+    transition: background-color 0.3s ease; /* Smooth transition on hover */
+    font-family: 'YourChosenFont', sans-serif; /* Apply the custom font */
+
+}
+  
+  .navbar a:hover {
+    background-color: #ffccff; /* Light pink on hover */
+  }
+  
+  .navbar .active {
+    background-color: #9966cc; /* Lavender background for the active link */
+    color: #ffffff; /* White text color for the active link */
+  }
+  
