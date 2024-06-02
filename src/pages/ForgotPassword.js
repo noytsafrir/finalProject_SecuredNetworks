@@ -1,17 +1,15 @@
-// pages/Login.js
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import styles from "@/styles/RequestForm.module.css";
 
-const Login = () => {
+const ForgotPassword = () => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [messageColor, setMessageColor] = useState('');
   const [showCodeInput, setShowCodeInput] = useState(false);
   const [code, setCode] = useState('');
-  const [timeRemaining, setTimeRemaining] = useState(180); // 3 minutes in seconds
-
+  const [generatedCode, setGeneratedCode] = useState('');
+  const [timeRemaining, setTimeRemaining] = useState(300); // 5 minutes in seconds
   const router = useRouter();
 
   useEffect(() => {
@@ -25,9 +23,30 @@ const Login = () => {
     return () => clearInterval(intervalId);
   }, [showCodeInput, timeRemaining]);
 
-  const handleLogin = () => {
-    if (!email || !password) {
-      setMessage('Both email and password are required.');
+  const sendCode = async (email, code) => {
+    try {
+      const response = await fetch('/api/send-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, code }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        console.log('Email sent');
+      } else {
+        console.error('Failed to send email');
+      }
+    } catch (error) {
+      console.error('An error occurred while sending the email', error);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setMessage('Email is required to reset your password.');
       setMessageColor('red');
       return;
     }
@@ -39,16 +58,37 @@ const Login = () => {
       return;
     }
 
-    setMessage(`Trying to login with email: ${email} and password: ${password}`);
+    const generatedCode = Math.random().toString(36).substring(2, 10); // Generate an 8-character random string
+    setGeneratedCode(generatedCode);
+
+    // Send the code via email
+    await sendCode(email, generatedCode);
+    console.log("The code is: " + generatedCode);
+    setMessage(`A message to reset your password was sent to: ${email}`);
     setMessageColor('green');
+    setShowCodeInput(true);
+    setTimeRemaining(300); // Reset timer to 5 minutes
   };
 
   const handleCodeSubmit = () => {
-    // Validate code here, for simplicity, we'll assume it's correct
-    setMessage('Code submitted successfully.');
+    if (code === generatedCode && timeRemaining > 0) {
+      router.push('/ResetPassword');
+    } else {
+      setMessage('Invalid code or time expired. Please try again.');
+      setMessageColor('red');
+    }
+  };
+
+  const handleResendCode = async () => {
+    const newGeneratedCode = Math.random().toString(36).substring(2, 10); // Generate a new 8-character random string
+    setGeneratedCode(newGeneratedCode);
+
+    // Send the new code via email
+    await sendCode(email, newGeneratedCode);
+
+    setMessage(`A new code was sent to: ${email}`);
     setMessageColor('green');
-    setShowCodeInput(false); // Hide the input fields after code submission
-    setTimeRemaining(0); // Reset timer
+    setTimeRemaining(300); // Reset timer to 5 minutes
   };
 
   const formatTime = (time) => {
@@ -60,13 +100,7 @@ const Login = () => {
   return (
     <div className={styles.footer}>
       <div className={styles.loginContainer}>
-        <h2 className={styles.center}>Please login:</h2>
-        <br />
-        <br />
-        <div>
-          <h3>Email</h3>
-          <h3>Password</h3>
-        </div>
+        <h2 className={styles.center}>Reset Password</h2>
         <br />
         <input
           type="email"
@@ -75,38 +109,22 @@ const Login = () => {
           onChange={(e) => setEmail(e.target.value)}
           className={styles.input}
         />
-        <input
-          type="password"
-          placeholder="Enter your password..."
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className={styles.input}
-        />
-        <br />
         <br />
         <div className={`${styles['button-container']}`} style={{ marginLeft: '550px' }}>
           <button
             type="button"
             className={styles.button}
-            onClick={handleLogin}
+            onClick={handleForgotPassword}
           >
-            Login
+            Submit
           </button>
         </div>
         <br />
-        <div className={`${styles['button-container']}`} style={{ marginLeft: '550px' }}>
-          <button
-            type="button"
-            className={styles.button}
-            onClick={() => router.push('/ForgotPassword')}
-          >
-            Forgot your password?
-          </button>
-        </div>
+        {message && <p style={{ color: messageColor }}>{message}</p>}
         {showCodeInput && (
           <div>
             <br />
-            <h3>Please enter code:</h3>
+            <h3>Please enter the code sent to your email:</h3>
             <input
               type="text"
               placeholder="Enter code..."
@@ -120,21 +138,30 @@ const Login = () => {
                 type="button"
                 className={styles.button}
                 onClick={handleCodeSubmit}
+                disabled={timeRemaining === 0}
+                style={{ backgroundColor: timeRemaining === 0 ? 'grey' : '' }}
               >
                 Submit Code
               </button>
+              <button
+                type="button"
+                className={styles.button}
+                onClick={handleResendCode}
+                disabled={timeRemaining > 0}
+                style={{ backgroundColor: timeRemaining > 0 ? 'grey' : '' }}
+              >
+                Resend Code
+              </button>
             </div>
             <br />
-            <p style={{ color: 'black' }}>
+            <p style={{ color: 'green' }}>
               Time remaining to use OTP: {formatTime(timeRemaining)}
             </p>
           </div>
         )}
-        <br />
-        {message && <p style={{ color: messageColor }}>{message}</p>}
       </div>
     </div>
   );
 };
 
-export default Login;
+export default ForgotPassword;

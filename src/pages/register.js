@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import styles from "@/styles/RequestForm.module.css";
 
 const Register = () => {
-  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');
@@ -10,7 +9,7 @@ const Register = () => {
   const [messageColor, setMessageColor] = useState('');
 
   const handleRegister = () => {
-    if (!fullName || !email || !password || !repeatPassword) {
+    if (!email || !password || !repeatPassword) {
       setMessage('All fields are required.');
       setMessageColor('red');
       return;
@@ -29,11 +28,10 @@ const Register = () => {
       return;
     }
 
-    setMessage(`Successfully registered with Full Name: ${fullName}, Email: ${email}, Password: ${password}`);
+    setMessage(`Successfully registered with Email: ${email}, Password: ${password}`);
     setMessageColor('green');
 
     // Clear form fields
-    setFullName('');
     setEmail('');
     setPassword('');
     setRepeatPassword('');
@@ -44,18 +42,6 @@ const Register = () => {
       <h1>Users Registration</h1>
       <br></br>
       <div>
-        <div className={styles.inputContainer}>
-          <h3>Full name</h3>
-          <input
-            type="text"
-            id="fullName"
-            placeholder="Enter your full name"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className={styles.input}
-          />
-        </div>
-        <br />
         <div className={styles.inputContainer} style={{ marginLeft: '24px' }}>
           <h3>Email</h3>
           <input

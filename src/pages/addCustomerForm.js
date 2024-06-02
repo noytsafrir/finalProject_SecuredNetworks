@@ -2,22 +2,14 @@ import React, { useState } from 'react';
 import styles from "@/styles/RequestForm.module.css";
 
 const AddCustomerForm = () => {
-  const [email, setEmail] = useState('');
   const [customerName, setCustomerName] = useState('');
-  const [password, setPassword] = useState('');
-  const [repeatPassword, setRepeatPassword] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
   const [message, setMessage] = useState('');
   const [messageColor, setMessageColor] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    // Validate email
-    if (!email || !/^\S+@\S+\.(com|org)$/.test(email)) {
-      setMessage('Email is required and must be in a valid format (ending with .com or .org).');
-      setMessageColor('red');
-      return;
-    }
 
     // Validate customer name
     if (!customerName) {
@@ -26,43 +18,34 @@ const AddCustomerForm = () => {
       return;
     }
 
-    // Validate passwords
-    if (!password || !repeatPassword) {
-      setMessage('Both password fields are required.');
+    // Validate company name
+    if (!companyName) {
+      setMessage('Company name is required.');
       setMessageColor('red');
       return;
     }
 
-    if (password !== repeatPassword || password.length < 6 || password.length > 10) {
-      setMessage('Passwords must match and be between 6 and 10 characters.');
+    // Validate customer address
+    if (!customerAddress) {
+      setMessage('Customer address is required.');
       setMessageColor('red');
       return;
     }
 
     // Success message
-    setMessage(`Customer added successfully with Email: ${email}, Name: ${customerName}`);
+    setMessage(`Customer added successfully with Name: ${customerName}, Company: ${companyName}, Address: ${customerAddress}`);
     setMessageColor('green');
 
     // Clear form fields
-    setEmail('');
     setCustomerName('');
-    setPassword('');
-    setRepeatPassword('');
+    setCompanyName('');
+    setCustomerAddress('');
   };
 
   return (
     <div className={styles.footer}>
       <h1 className={styles.title}>Add a New Customer!</h1>
       <form className={styles.form} onSubmit={handleSubmit}>
-        <h2>Email:</h2>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className={styles.input}
-        />
-        <br />
         <h2>Customer Name:</h2>
         <input
           type="text"
@@ -72,21 +55,21 @@ const AddCustomerForm = () => {
           className={styles.input}
         />
         <br />
-        <h2>Customer Password:</h2>
+        <h2>Company Name:</h2>
         <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          type="text"
+          placeholder="Company Name"
+          value={companyName}
+          onChange={(e) => setCompanyName(e.target.value)}
           className={styles.input}
         />
         <br />
-        <h2>Repeat Password:</h2>
+        <h2>Customer Address:</h2>
         <input
-          type="password"
-          placeholder="Repeat Password"
-          value={repeatPassword}
-          onChange={(e) => setRepeatPassword(e.target.value)}
+          type="text"
+          placeholder="Customer Address"
+          value={customerAddress}
+          onChange={(e) => setCustomerAddress(e.target.value)}
           className={styles.input}
         />
         <br />
