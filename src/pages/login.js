@@ -1,7 +1,7 @@
-// pages/Login.js
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import styles from "@/styles/RequestForm.module.css";
+import axios from 'axios';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -39,8 +39,19 @@ const Login = () => {
       return;
     }
 
-    setMessage(`Trying to login with email: ${email} and password: ${password}`);
-    setMessageColor('green');
+    axios.post('http://localhost:5000/login', { email, password })
+      .then(response => {
+        const { message, status } = response.data;
+        setMessage(message);
+        setMessageColor(status === 'success' ? 'green' : 'red');
+        if (status === 'success') {
+          setShowCodeInput(true);  // Show code input if login is successful
+        }
+      })
+      .catch(error => {
+        setMessage('Login failed. Please try again.');
+        setMessageColor('red');
+      });
   };
 
   const handleCodeSubmit = () => {
@@ -103,33 +114,6 @@ const Login = () => {
             Forgot your password?
           </button>
         </div>
-        {showCodeInput && (
-          <div>
-            <br />
-            <h3>Please enter code:</h3>
-            <input
-              type="text"
-              placeholder="Enter code..."
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className={styles.input}
-            />
-            <br />
-            <div className={`${styles['button-container']}`} style={{ marginLeft: '550px' }}>
-              <button
-                type="button"
-                className={styles.button}
-                onClick={handleCodeSubmit}
-              >
-                Submit Code
-              </button>
-            </div>
-            <br />
-            <p style={{ color: 'black' }}>
-              Time remaining to use OTP: {formatTime(timeRemaining)}
-            </p>
-          </div>
-        )}
         <br />
         {message && <p style={{ color: messageColor }}>{message}</p>}
       </div>
