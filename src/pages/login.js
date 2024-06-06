@@ -95,7 +95,7 @@ const Login = () => {
         />
         <br />
         <br />
-        <div className={styles['button-container']} style={{ marginLeft: '550px' }}>
+        <div className={`${styles['button-container']}`} style={{ marginLeft: '550px' }}>
           <button
             type="button"
             className={styles.button}
@@ -104,9 +104,8 @@ const Login = () => {
             Login
           </button>
         </div>
-
         <br />
-        <div className={styles['button-container']} style={{ marginLeft: '550px' }}>
+        <div className={`${styles['button-container']}`} style={{ marginLeft: '550px' }}>
           <button
             type="button"
             className={styles.button}
@@ -115,33 +114,6 @@ const Login = () => {
             Forgot your password?
           </button>
         </div>
-        {showCodeInput && (
-          <div>
-            <br />
-            <h3>Please enter code:</h3>
-            <input
-              type="text"
-              placeholder="Enter code..."
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className={styles.input}
-            />
-            <br />
-            <div className={styles['button-container']} style={{ marginLeft: '550px' }}>
-              <button
-                type="button"
-                className={styles.button}
-                onClick={handleCodeSubmit}
-              >
-                Submit Code
-              </button>
-            </div>
-            <br />
-            <p style={{ color: 'black' }}>
-              Time remaining to use OTP: {formatTime(timeRemaining)}
-            </p>
-          </div>
-        )}
         <br />
         {message && <p style={{ color: messageColor }}>{message}</p>}
       </div>
@@ -149,4 +121,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Login;
