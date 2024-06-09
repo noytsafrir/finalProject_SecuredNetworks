@@ -100,7 +100,7 @@ const ForgotPassword = () => {
   return (
     <div className={styles.footer}>
       <div className={styles.loginContainer}>
-        <h2 className={styles.center}>Reset Password</h2>
+        <h2 className={styles.center}>Forgot Password</h2>
         <br />
         <input
           type="email"
