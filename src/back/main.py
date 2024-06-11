@@ -35,18 +35,20 @@ def login():
     email = data.get('email')
     password = data.get('password')
 
-    print(f"Login attempt with email: {email}, password: {password}")
-
     if not email or not password:
-        print("Both email and password are required.")
         return jsonify({'message': 'Both email and password are required.', 'status': 'fail'}), 400
-#to do 
-    if email in mock_users_db and mock_users_db[email] == password:
-        print("Login successful!")
+
+    # Check if the user exists in the database
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({'message': 'User not found.', 'status': 'fail'}), 401
+
+    # Check if the password matches
+    if user.check_password(password):
         return jsonify({'message': 'Login successful!', 'status': 'success'}), 200
     else:
-        print("Invalid email or password.")
-        return jsonify({'message': 'Invalid email or password.', 'status': 'fail'}), 401
+        return jsonify({'message': 'Invalid password.', 'status': 'fail'}), 401
+    
 #להתאים את הפרונט 
 @app.route('/new_password', methods=['POST'])
 def new_password():
@@ -64,6 +66,7 @@ def new_password():
     user.set_password(new_password)
     db.session.commit()
     return jsonify({'message': 'Password updated successfully'}), 200
+
 #להתאים את הפרונט 
 @app.route('/add_customer', methods=['POST'])
 def add_customer():
@@ -81,37 +84,56 @@ def add_customer():
     db.session.commit()
     return jsonify({'message': 'Customer added successfully'}), 200
 
+
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
-    repeat_password = data.get('repeat_password')
 
-    print(f"Register attempt with email: {email}, password: {password}, repeat_password: {repeat_password}")
+    if check_user(email):
+        return jsonify({'message': 'User already exists'}), 400
+    
+    if not password_configuration(password):
+        return jsonify({'message': 'Password is WEAK AF! --> get better :L'}), 400      # TODO change message
 
-    if not email or not password or not repeat_password:
-        print("All fields are required.")
-        return jsonify({'message': 'All fields are required.', 'status': 'fail'}), 400
+    new_user = User(email=email)
+    new_user.set_password(password)
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify({'message': 'User registered successfully'}), 200
 
-    email_pattern = r'^[^\s@]+@[^\s@]+\.(com|org)$'
-    if not re.match(email_pattern, email):
-        print("Invalid email format.")
-        return jsonify({'message': 'Invalid email format. Please use a valid email ending with .com or .org.', 'status': 'fail'}), 400
+# @app.route('/register', methods=['POST'])
+# def register():
+#     data = request.get_json()
+#     email = data.get('email')
+#     password = data.get('password')
+#     repeat_password = data.get('repeat_password')
 
-    if password != repeat_password:
-        print("Passwords do not match.")
-        return jsonify({'message': 'Passwords do not match.', 'status': 'fail'}), 400
-#to do
-    if email in mock_users_db:
-        print("Email already registered.")
-        return jsonify({'message': 'Email already registered.', 'status': 'fail'}), 400
-#to do
+#     print(f"Register attempt with email: {email}, password: {password}, repeat_password: {repeat_password}")
 
-    # Add the new user to the mock database
-    mock_users_db[email] = password
-    print("Registration successful!")
-    return jsonify({'message': 'Registration successful!', 'status': 'success'}), 200
+#     if not email or not password or not repeat_password:
+#         print("All fields are required.")
+#         return jsonify({'message': 'All fields are required.', 'status': 'fail'}), 400
+
+#     email_pattern = r'^[^\s@]+@[^\s@]+\.(com|org)$'
+#     if not re.match(email_pattern, email):
+#         print("Invalid email format.")
+#         return jsonify({'message': 'Invalid email format. Please use a valid email ending with .com or .org.', 'status': 'fail'}), 400
+
+#     if password != repeat_password:
+#         print("Passwords do not match.")
+#         return jsonify({'message': 'Passwords do not match.', 'status': 'fail'}), 400
+# #to do
+#     if email in mock_users_db:
+#         print("Email already registered.")
+#         return jsonify({'message': 'Email already registered.', 'status': 'fail'}), 400
+# #to do
+
+#     # Add the new user to the mock database
+#     mock_users_db[email] = password
+#     print("Registration successful!")
+#     return jsonify({'message': 'Registration successful!', 'status': 'success'}), 200
 
 if __name__ == '__main__':
     with app.app_context():

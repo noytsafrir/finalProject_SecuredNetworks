@@ -30,21 +30,34 @@ const Register = () => {
         }
 
         axios.post('http://127.0.0.1:5000/register', { email, password, repeat_password: repeatPassword })
-            .then(response => {
-                const { message, status } = response.data;
-                setMessage(message);
-                setMessageColor(status === 'success' ? 'green' : 'red');
-                if (status === 'success') {
-                    // Clear form fields on successful registration
-                    setEmail('');
-                    setPassword('');
-                    setRepeatPassword('');
-                }
-            })
-            .catch(error => {
-                setMessage('Registration failed. Please try again.');
+        .then(response => {
+            const { message, status } = response.data;
+            setMessage(message);
+            setMessageColor(status === 'success' ? 'green' : 'red');
+            if (status === 'success') {
+                // Clear form fields on successful registration
+                setEmail('');
+                setPassword('');
+                setRepeatPassword('');
+            }
+        })
+        .catch(error => {
+            if (error.response) {
+                // The request was made and the server responded with a status code
+                const { data, status } = error.response;
+                setMessage(data.message || 'Registration failed. Please try again.');
+                setMessageColor(status === 200 || status === 201 ? 'green' : 'red');
+            } else if (error.request) {
+                // The request was made but no response was received
+                setMessage('No response received from the server. Please try again later.');
                 setMessageColor('red');
-            });
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                setMessage('An unexpected error occurred. Please try again.');
+                setMessageColor('red');
+            }
+        });
+    
     };
 
     return (

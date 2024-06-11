@@ -40,18 +40,31 @@ const Login = () => {
     }
 
     axios.post('http://localhost:5000/login', { email, password })
-      .then(response => {
-        const { message, status } = response.data;
-        setMessage(message);
+    .then(response => {
+      const { message, status } = response.data;
+      setMessage(message);
+      setMessageColor(status === 'success' ? 'green' : 'red');
+      if (status === 'success') {
+        setShowCodeInput(true);  // Show code input if login is successful
+      }
+    })
+    .catch(error => {
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        const { message, status } = error.response.data;
+        setMessage(message || 'An error occurred.');
         setMessageColor(status === 'success' ? 'green' : 'red');
-        if (status === 'success') {
-          setShowCodeInput(true);  // Show code input if login is successful
-        }
-      })
-      .catch(error => {
+      } else if (error.request) {
+        // The request was made but no response was received
+        setMessage('No response received from the server. Please try again.');
+        setMessageColor('red');
+      } else {
+        // Something happened in setting up the request that triggered an Error
         setMessage('Login failed. Please try again.');
         setMessageColor('red');
-      });
+      }
+    });
   };
 
   const handleCodeSubmit = () => {
