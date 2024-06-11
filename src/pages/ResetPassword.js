@@ -1,7 +1,7 @@
-// pages/ResetPassword.js
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import styles from "@/styles/RequestForm.module.css";
+import axios from 'axios'; // Import Axios for HTTP requests
 
 const ResetPassword = () => {
   const [newPassword, setNewPassword] = useState('');
@@ -10,7 +10,7 @@ const ResetPassword = () => {
   const [messageColor, setMessageColor] = useState('');
   const router = useRouter();
 
-  const handleResetPassword = () => {
+  const handleResetPassword = async () => {
     if (newPassword.length < 8) {
       setMessage('Password should be at least 8 characters long.');
       setMessageColor('red');
@@ -21,13 +21,28 @@ const ResetPassword = () => {
       setMessageColor('red');
       return;
     }
-    
-    // If passwords match and meet the length criteria, navigate to login page
-    setMessage('Password reset successful. Redirecting to login...');
-    setMessageColor('green');
-    setTimeout(() => {
-      router.push('/login');
-    }, 2000);
+
+    console.log("Going to change the password of the user: " + localStorage.getItem('forgotUserEmail'));
+    console.log("The new password is: " + newPassword);
+
+    try {
+      const response = await axios.post('http://localhost:5000/new_password', {
+        email: localStorage.getItem('forgotUserEmail'), // Assuming you stored the logged-in user's email
+        new_password: newPassword
+      });
+      const { message, status } = response.data;
+      setMessage(message);
+      setMessageColor(status === 200 ? 'green' : 'red');
+      if (status === 200) {
+        setTimeout(() => {
+          router.push('/login');
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      setMessage('An error occurred. Please try again.');
+      setMessageColor('red');
+    }
   };
 
   return (

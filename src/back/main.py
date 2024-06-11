@@ -35,19 +35,19 @@ def login():
     email = data.get('email')
     password = data.get('password')
 
-    if not email or not password:
-        return jsonify({'message': 'Both email and password are required.', 'status': 'fail'}), 400
+    # if not email or not password:
+    #     return jsonify({'message': 'Both email and password are required.', 'status': 'fail'}), 400
 
     # Check if the user exists in the database
     user = User.query.filter_by(email=email).first()
     if not user:
-        return jsonify({'message': 'User not found.', 'status': 'fail'}), 401
+        return jsonify({'message': 'User not found.', 'status': 401})
 
     # Check if the password matches
     if user.check_password(password):
-        return jsonify({'message': 'Login successful!', 'status': 'success'}), 200
+        return jsonify({'message': 'Login successful!', 'status': 200})
     else:
-        return jsonify({'message': 'Invalid password.', 'status': 'fail'}), 401
+        return jsonify({'message': 'Invalid password.', 'status': 401})
     
 #להתאים את הפרונט 
 @app.route('/new_password', methods=['POST'])
@@ -58,14 +58,14 @@ def new_password():
 
     user = User.query.filter_by(email=email).first()
     if not user:
-        return jsonify({'message': 'User not found'}), 404
+        return jsonify({'message': 'User not found' , 'status': 404})
 
     if not password_configuration(new_password):
-        return jsonify({'message': 'Password does not meet configuration requirements'}), 400
+        return jsonify({'message': 'Password does not meet configuration requirements', 'status' : 400})
 
     user.set_password(new_password)
     db.session.commit()
-    return jsonify({'message': 'Password updated successfully'}), 200
+    return jsonify({'message': 'Password updated successfully', 'status' : 200})
 
 #להתאים את הפרונט 
 @app.route('/add_customer', methods=['POST'])
@@ -77,12 +77,12 @@ def add_customer():
 
     existing_customer = Customer.query.filter_by(customer_name=customer_name, company_name=company_name).first()
     if existing_customer:
-        return jsonify({'message': 'Customer already exists'}), 400
+        return jsonify({'message': 'Customer already exists', 'status': 400})
 
     new_customer = Customer(customer_name=customer_name, company_name=company_name, address=address)
     db.session.add(new_customer)
     db.session.commit()
-    return jsonify({'message': 'Customer added successfully'}), 200
+    return jsonify({'message': 'Customer added successfully' , 'status': 200})
 
 
 @app.route('/register', methods=['POST'])
@@ -95,13 +95,13 @@ def register():
         return jsonify({'message': 'User already exists'}), 400
     
     if not password_configuration(password):
-        return jsonify({'message': 'Password is WEAK AF! --> get better :L'}), 400      # TODO change message
+        return jsonify({'message': 'Password is WEAK AF! --> get better :L', 'status': 400})      # TODO change message
 
     new_user = User(email=email)
     new_user.set_password(password)
     db.session.add(new_user)
     db.session.commit()
-    return jsonify({'message': 'User registered successfully'}), 200
+    return jsonify({'message': 'User registered successfully', 'status': 200})
 
 # @app.route('/register', methods=['POST'])
 # def register():

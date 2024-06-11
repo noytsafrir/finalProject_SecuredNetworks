@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from "@/styles/RequestForm.module.css";
 
 const UpdatePassword = () => {
@@ -7,8 +7,27 @@ const UpdatePassword = () => {
   const [repeatNewPassword, setRepeatNewPassword] = useState('');
   const [message, setMessage] = useState('');
   const [messageColor, setMessageColor] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const checkLoggedInStatus = () => {
+      const loggedInUserEmail = localStorage.getItem('loggedInUserEmail');
+      setIsLoggedIn(!!loggedInUserEmail); // !! converts to boolean
+    };
+
+    if (typeof window !== 'undefined') {
+      // Check if the window object is defined (i.e., running on the client side)
+      checkLoggedInStatus();
+    }
+  }, []);
 
   const handleUpdatePassword = () => {
+    if (!isLoggedIn) {
+      setMessage('Please log in to update your password.');
+      setMessageColor('red');
+      return;
+    }
+
     if (!oldPassword || !newPassword || !repeatNewPassword) {
       setMessage('All fields are required.');
       setMessageColor('red');
@@ -32,55 +51,59 @@ const UpdatePassword = () => {
 
   return (
     <div className={styles.footer}>
-      <h1>Update Password</h1>
-      <br></br>
-      <div>
-        <div className={styles.inputContainer}>
-          <h3>Old Password</h3>
-          <input
-            type="password"
-            id="oldPassword"
-            placeholder="Enter your old password"
-            value={oldPassword}
-            onChange={(e) => setOldPassword(e.target.value)}
-            className={styles.input}
-          />
-        </div>
-        <div className={styles.inputContainer}>
-          <h3>New Password</h3>
-          <input
-            type="password"
-            id="newPassword"
-            placeholder="Enter your new password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className={styles.input}
-          />
-        </div>
-        <br />
-        <div className={styles.inputContainer}>
-          <h3>Repeat New Password</h3>
-          <input
-            type="password"
-            id="repeatNewPassword"
-            placeholder="Repeat your new password"
-            value={repeatNewPassword}
-            onChange={(e) => setRepeatNewPassword(e.target.value)}
-            className={styles.input}
-          />
-        </div>
+      {isLoggedIn ? (
+        <div>
+          <div className={styles.inputContainer}>
+          <h1>Update Password</h1>
+          <br></br>
+            <h3>Old Password</h3>
+            <input
+              type="password"
+              id="oldPassword"
+              placeholder="Enter your old password"
+              value={oldPassword}
+              onChange={(e) => setOldPassword(e.target.value)}
+              className={styles.input}
+            />
+          </div>
+          <div className={styles.inputContainer}>
+            <h3>New Password</h3>
+            <input
+              type="password"
+              id="newPassword"
+              placeholder="Enter your new password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className={styles.input}
+            />
+          </div>
+          <br />
+          <div className={styles.inputContainer}>
+            <h3>Repeat New Password</h3>
+            <input
+              type="password"
+              id="repeatNewPassword"
+              placeholder="Repeat your new password"
+              value={repeatNewPassword}
+              onChange={(e) => setRepeatNewPassword(e.target.value)}
+              className={styles.input}
+            />
+          </div>
 
-        <div className={`${styles['button-container']}`} style={{ marginLeft: '400px' }}>
-          <button
-            type="button"
-            className={styles.button}
-            onClick={handleUpdatePassword}
-          >
-            Update Password
-          </button>
+          <div className={`${styles['button-container']}`} style={{ marginLeft: '400px' }}>
+            <button
+              type="button"
+              className={styles.button}
+              onClick={handleUpdatePassword}
+            >
+              Update Password
+            </button>
+          </div>
+          {message && <p style={{ color: messageColor, textAlign: 'center' }}>{message}</p>}
         </div>
-        {message && <p style={{ color: messageColor, textAlign: 'center' }}>{message}</p>}
-      </div>
+      ) : (
+        <h1 className={styles.title}>Please log in to update the password.</h1>
+      )}
     </div>
   );
 };

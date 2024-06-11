@@ -72,6 +72,7 @@ const ForgotPassword = () => {
 
   const handleCodeSubmit = () => {
     if (code === generatedCode && timeRemaining > 0) {
+      localStorage.setItem('forgotUserEmail', email)
       router.push('/ResetPassword');
     } else {
       setMessage('Invalid code or time expired. Please try again.');
