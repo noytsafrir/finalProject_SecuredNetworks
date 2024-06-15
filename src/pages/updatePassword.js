@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import styles from "@/styles/RequestForm.module.css";
 import axios from 'axios';
+import styles from "@/styles/RequestForm.module.css";
 
 const UpdatePassword = () => {
   const [oldPassword, setOldPassword] = useState('');
@@ -9,14 +9,19 @@ const UpdatePassword = () => {
   const [message, setMessage] = useState('');
   const [messageColor, setMessageColor] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
 
   useEffect(() => {
     const checkLoggedInStatus = () => {
       const loggedInUserEmail = localStorage.getItem('loggedInUserEmail');
       setIsLoggedIn(!!loggedInUserEmail); // !! converts to boolean
+      if (loggedInUserEmail) {
+        setUserEmail(loggedInUserEmail);
+      }
     };
 
     if (typeof window !== 'undefined') {
+      // Check if the window object is defined (i.e., running on the client side)
       checkLoggedInStatus();
     }
   }, []);
@@ -40,50 +45,29 @@ const UpdatePassword = () => {
       return;
     }
 
-    axios.post('http://127.0.0.1:5000/update_password', { oldPassword, newPassword })
-    .then(response => {
-      const { message, status } = response.data;
-      setMessage(message);
-      setMessageColor(status === 200 ? 'green' : 'red');
-      if (status === 200) {
+    let response='';
+    try {
+      response = await axios.post('http://127.0.0.1:5000/update_password', {
+        email: userEmail,
+        old_password: oldPassword,
+        new_password: newPassword
+      });
+
+      if (response.data.status === 200) {
+        setMessage('Password updated successfully.');
+        setMessageColor('green');
+
+        // Clear form fields
         setOldPassword('');
         setNewPassword('');
         setRepeatNewPassword('');
+      } else {
+        setMessage(response.data.message);
+        setMessageColor('red');
       }
-    })
-    
-    
-    
-    // const email = localStorage.getItem('loggedInUserEmail');
-
-    // try {
-    //   const response = await fetch('http://localhost:5000/update_password', {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify({ email, oldPassword, newPassword }),
-    //   });
-
-    //   const data = await response.json();
-
-    //   if (data.status === 200) {
-    //     setMessage('Password updated successfully.');
-    //     setMessageColor('green');
-
-    //     // Clear form fields
-    //     setOldPassword('');
-    //     setNewPassword('');
-    //     setRepeatNewPassword('');
-    //   } else {
-    //     setMessage(data.message);
-    //     setMessageColor('red');
-    //   }
-    // } catch (error) {
-    //   console.error('An error occurred while updating the password', error);
-    //   setMessage('An error occurred. Please try again.');
-    //   setMessageColor('red');
-    // }
+    } catch (error) {
+      setMessage(response.data.message);
+      setMessageColor('red');    }
   };
 
   return (
@@ -92,7 +76,7 @@ const UpdatePassword = () => {
         <div>
           <div className={styles.inputContainer}>
             <h1>Update Password</h1>
-            <br></br>
+            <br />
             <h3>Old Password</h3>
             <input
               type="password"

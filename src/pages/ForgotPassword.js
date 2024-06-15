@@ -23,26 +23,26 @@ const ForgotPassword = () => {
     return () => clearInterval(intervalId);
   }, [showCodeInput, timeRemaining]);
 
-  const sendCode = async (email) => {
-    try {
-      const response = await fetch('/api/send-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
+  // const sendCode = async (email, code) => {
+  //   try {
+  //     const response = await fetch('/api/send-code', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({ email, code }),
+  //     });
 
-      const data = await response.json();
-      if (data.success) {
-        console.log('Reset code sent');
-      } else {
-        console.error('Failed to send reset code');
-      }
-    } catch (error) {
-      console.error('An error occurred while sending the reset code', error);
-    }
-  };
+  //     const data = await response.json();
+  //     if (data.success) {
+  //       console.log('Reset code sent');
+  //     } else {
+  //       console.error('Failed to send reset code');
+  //     }
+  //   } catch (error) {
+  //     console.error('An error occurred while sending the reset code', error);
+  //   }
+  // };
 
   const handleForgotPassword = async () => {
     if (!email) {
@@ -94,15 +94,15 @@ const ForgotPassword = () => {
         }, 5000);
     } else {
         // Something happened in setting up the request that triggered an Error
-        setMessage('An unexpected error occurred. Please try again.');
-        setMessageColor('red');
+        // setMessage('An unexpected error occurred. Please try again.');
+        // setMessageColor('red');
         setTimeout(() => {
             setMessage('');
             setMessageColor('');
         }, 5000);
     }
   });
-    await sendCode(email);
+    // await sendCode(email);
     setMessage(`A message to reset your password was sent to: ${email}`);
     setMessageColor('green');
     setShowCodeInput(true);
