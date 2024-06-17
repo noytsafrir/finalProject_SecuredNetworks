@@ -73,7 +73,7 @@ def add_customer():
     new_customer = Customer(customer_name=customer_name, company_name=company_name, address=address)
     db.session.add(new_customer)
     db.session.commit()
-    return jsonify({'message': 'Customer added successfully', 'status': 200})
+    return jsonify({'message': 'New Customer was added successfully: ' + customer_name, 'status': 200})
 
 @app.route('/verify_reset_code', methods=['POST'])
 def verify_reset_code():
