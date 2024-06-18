@@ -1,4 +1,4 @@
-import React, { useState, useEffect  } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from "@/styles/RequestForm.module.css";
 import axios from 'axios';
 
@@ -96,13 +96,28 @@ const Register = () => {
         });
     };
 
+    const handleLogout = () => {
+        // Clear user email from localStorage upon logout
+        localStorage.removeItem('loggedInUserEmail');
+        setIsLoggedIn(false);
+    };
+
     return (
         <div className={styles.footer}>
             {isLoggedIn ? (
                 <div>
                     <h1>You are already logged in!</h1>
-                    <br></br>
+                    <br />
                     <h3>Email: {localStorage.getItem('loggedInUserEmail')}</h3>
+                    <div className={`${styles['button-container']}`} style={{ marginLeft: '550px' }}>
+                        <button
+                            type="button"
+                            className={styles.button}
+                            onClick={handleLogout}
+                        >
+                            Logout
+                        </button>
+                    </div>
                 </div>
             ) : (
                 <div>

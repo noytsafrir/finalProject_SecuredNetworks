@@ -181,6 +181,22 @@ def update_password():
         return jsonify({'message': f'An error occurred: {str(e)}', 'status': 500})
 #-------------------------------------------------End Update Password-------------------------------------------------
 
+#---------------------------------------------------Get Customers-----------------------------------------------------
+@app.route('/get_customers', methods=['GET'])
+def get_customers():
+    customers = Customer.query.all()
+    customers_list = [
+        {
+            'customer_name': customer.customer_name,
+            'company_name': customer.company_name,
+            'address': customer.address
+        }
+        for customer in customers
+    ]
+    return jsonify(customers_list)
+
+#-------------------------------------------------End Get Customers-------------------------------------------------
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
