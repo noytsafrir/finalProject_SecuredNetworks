@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from models import db, Customer, User, PasswordHistory
-from flask_login import LoginManager, UserMixin, login_user, login_required, current_user
+# from flask_login import LoginManager, UserMixin, login_user, login_required, current_user
 from flask_cors import CORS
 from config import Config
 from validator import *
@@ -13,8 +13,8 @@ app = Flask(__name__)
 app.config.from_object(Config)
 CORS(app)
 db.init_app(app)
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
+# login_manager = LoginManager(app)
+# login_manager.login_view = 'login'
 
 reset_codes = {}
 

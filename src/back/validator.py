@@ -15,14 +15,14 @@ def is_password_complex(password):
         return False
     if Config.CONTAIN_NUMERIC and not re.search(r'[0-9]', password):
         return False
-    if Config.CONTAIN_SPECIAL and not re.search(r'[@$!%*?&#]', password):
+    if Config.CONTAIN_SPECIAL and not re.search(r'[@$!%*?&#./]', password):
         return False
     return True
 
 
 def is_dictionary_word(password):
     for word in Config.DICTIONARY_WORDS:
-        if word.lower() in password.lower():
+        if word.lower() == password.lower():
             return True
     return False
 
