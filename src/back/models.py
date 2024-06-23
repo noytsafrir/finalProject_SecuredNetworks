@@ -3,6 +3,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from passlib.hash import pbkdf2_sha256
 import os
+import pwd_enc
 
 db = SQLAlchemy()
 
@@ -19,10 +20,10 @@ class User(db.Model):
     password_history = db.relationship('PasswordHistory', backref='user', lazy=True)
 
     def set_password(self, password): #לבדוק האם זה תואם לחלק שלהם 
-        self.password_hash = pbkdf2_sha256.hash(password)
+        self.password_hash = pwd_enc.hash_password(password)
 
     def check_password(self, password):
-        return pbkdf2_sha256.verify(password, self.password_hash)
+        return pwd_enc.verify_password(self.password_hash, password)
     
     def increment_login_attempts(self):
         self.login_attempts += 1
