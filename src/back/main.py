@@ -73,7 +73,7 @@ def add_customer():
     new_customer = Customer(customer_name=customer_name, company_name=company_name, address=address)
     db.session.add(new_customer)
     db.session.commit()
-    return jsonify({'message': 'Customer added successfully', 'status': 200})
+    return jsonify({'message': 'New Customer was added successfully: ' + customer_name, 'status': 200})
 
 @app.route('/verify_reset_code', methods=['POST'])
 def verify_reset_code():
@@ -180,6 +180,22 @@ def update_password():
         db.session.rollback()
         return jsonify({'message': f'An error occurred: {str(e)}', 'status': 500})
 #-------------------------------------------------End Update Password-------------------------------------------------
+
+#---------------------------------------------------Get Customers-----------------------------------------------------
+@app.route('/get_customers', methods=['GET'])
+def get_customers():
+    customers = Customer.query.all()
+    customers_list = [
+        {
+            'customer_name': customer.customer_name,
+            'company_name': customer.company_name,
+            'address': customer.address
+        }
+        for customer in customers
+    ]
+    return jsonify(customers_list)
+
+#-------------------------------------------------End Get Customers-------------------------------------------------
 
 if __name__ == '__main__':
     with app.app_context():
