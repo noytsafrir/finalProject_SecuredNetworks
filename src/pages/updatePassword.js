@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
-<<<<<<< HEAD
-=======
 import axios from 'axios';
->>>>>>> main
 import styles from "@/styles/RequestForm.module.css";
 
 const UpdatePassword = () => {
@@ -12,21 +9,15 @@ const UpdatePassword = () => {
   const [message, setMessage] = useState('');
   const [messageColor, setMessageColor] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-<<<<<<< HEAD
-=======
   const [userEmail, setUserEmail] = useState('');
->>>>>>> main
 
   useEffect(() => {
     const checkLoggedInStatus = () => {
       const loggedInUserEmail = localStorage.getItem('loggedInUserEmail');
       setIsLoggedIn(!!loggedInUserEmail); // !! converts to boolean
-<<<<<<< HEAD
-=======
       if (loggedInUserEmail) {
         setUserEmail(loggedInUserEmail);
       }
->>>>>>> main
     };
 
     if (typeof window !== 'undefined') {
@@ -34,16 +25,6 @@ const UpdatePassword = () => {
       checkLoggedInStatus();
     }
   }, []);
-<<<<<<< HEAD
-
-  const handleUpdatePassword = () => {
-    if (!isLoggedIn) {
-      setMessage('Please log in to update your password.');
-      setMessageColor('red');
-      return;
-    }
-
-=======
 
   const handleUpdatePassword = async () => {
     if (!isLoggedIn) {
@@ -52,7 +33,6 @@ const UpdatePassword = () => {
       return;
     }
 
->>>>>>> main
     if (!oldPassword || !newPassword || !repeatNewPassword) {
       setMessage('All fields are required.');
       setMessageColor('red');
@@ -95,13 +75,8 @@ const UpdatePassword = () => {
       {isLoggedIn ? (
         <div>
           <div className={styles.inputContainer}>
-<<<<<<< HEAD
-          <h1>Update Password</h1>
-          <br></br>
-=======
             <h1>Update Password</h1>
             <br />
->>>>>>> main
             <h3>Old Password</h3>
             <input
               type="password"

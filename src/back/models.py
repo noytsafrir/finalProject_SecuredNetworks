@@ -1,8 +1,5 @@
-<<<<<<< HEAD
-=======
 # from werkzeug.security import generate_password_hash, check_password_hash
 # from flask_login import UserMixin
->>>>>>> main
 from flask_sqlalchemy import SQLAlchemy
 from passlib.hash import pbkdf2_sha256
 import os
@@ -18,19 +15,14 @@ class Customer(db.Model):
 class User(db.Model):
     email = db.Column(db.String(255), primary_key=True)
     password_hash = db.Column(db.String(255), nullable=False)
-<<<<<<< HEAD
-=======
     login_attempts = db.Column(db.Integer, default=0)
     password_history = db.relationship('PasswordHistory', backref='user', lazy=True)
->>>>>>> main
 
     def set_password(self, password): #לבדוק האם זה תואם לחלק שלהם 
         self.password_hash = pbkdf2_sha256.hash(password)
 
     def check_password(self, password):
         return pbkdf2_sha256.verify(password, self.password_hash)
-<<<<<<< HEAD
-=======
     
     def increment_login_attempts(self):
         self.login_attempts += 1
@@ -56,4 +48,3 @@ class PasswordHistory(db.Model):
 
     def set_password(self, password):
         self.password_hash = password
->>>>>>> main

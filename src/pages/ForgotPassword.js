@@ -109,14 +109,6 @@ const ForgotPassword = () => {
     setTimeRemaining(300); // Reset timer to 5 minutes
   };
 
-<<<<<<< HEAD
-  const handleCodeSubmit = () => {
-    if (code === generatedCode && timeRemaining > 0) {
-      localStorage.setItem('forgotUserEmail', email)
-      router.push('/ResetPassword');
-    } else {
-      setMessage('Invalid code or time expired. Please try again.');
-=======
   const handleCodeSubmit = async () => {
     try {
       const response = await fetch('http://localhost:5000/verify_reset_code', {
@@ -138,7 +130,6 @@ const ForgotPassword = () => {
     } catch (error) {
       console.error('An error occurred while verifying the code', error);
       setMessage('An error occurred. Please try again.');
->>>>>>> main
       setMessageColor('red');
     }
   };
