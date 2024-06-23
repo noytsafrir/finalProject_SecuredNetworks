@@ -9,6 +9,7 @@ const Navbar = () => {
       <li><a href="register">Register</a></li>
       <li><a href="addCustomerForm">Add a customer!</a></li>
       <li><a href="updatePassword">Update password</a></li>
+      <li><a href="CustomerList">View Customers</a></li>
       <li><a href="about">About</a></li>
     </ul>
   );

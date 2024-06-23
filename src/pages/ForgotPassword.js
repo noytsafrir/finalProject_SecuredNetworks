@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import styles from "@/styles/RequestForm.module.css";
+import axios from 'axios';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -8,7 +9,6 @@ const ForgotPassword = () => {
   const [messageColor, setMessageColor] = useState('');
   const [showCodeInput, setShowCodeInput] = useState(false);
   const [code, setCode] = useState('');
-  const [generatedCode, setGeneratedCode] = useState('');
   const [timeRemaining, setTimeRemaining] = useState(300); // 5 minutes in seconds
   const router = useRouter();
 
@@ -23,26 +23,26 @@ const ForgotPassword = () => {
     return () => clearInterval(intervalId);
   }, [showCodeInput, timeRemaining]);
 
-  const sendCode = async (email, code) => {
-    try {
-      const response = await fetch('/api/send-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, code }),
-      });
+  // const sendCode = async (email, code) => {
+  //   try {
+  //     const response = await fetch('/api/send-code', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({ email, code }),
+  //     });
 
-      const data = await response.json();
-      if (data.success) {
-        console.log('Email sent');
-      } else {
-        console.error('Failed to send email');
-      }
-    } catch (error) {
-      console.error('An error occurred while sending the email', error);
-    }
-  };
+  //     const data = await response.json();
+  //     if (data.success) {
+  //       console.log('Reset code sent');
+  //     } else {
+  //       console.error('Failed to send reset code');
+  //     }
+  //   } catch (error) {
+  //     console.error('An error occurred while sending the reset code', error);
+  //   }
+  // };
 
   const handleForgotPassword = async () => {
     if (!email) {
@@ -58,35 +58,93 @@ const ForgotPassword = () => {
       return;
     }
 
-    const generatedCode = Math.random().toString(36).substring(2, 10); // Generate an 8-character random string
-    setGeneratedCode(generatedCode);
-
-    // Send the code via email
-    await sendCode(email, generatedCode);
-    console.log("The code is: " + generatedCode);
+    axios.post('http://127.0.0.1:5000/forgot_password', { email })
+    .then(respone => {
+      const { message, status } = response.data;
+      console.log("message is: " + message);
+      console.log("status is: " + status);
+      setMessage(message);
+      setMessageColor(status === 200 ? 'green' : 'red');
+      if (status === 200) {
+          // Optionally clear form fields on successful request
+          setEmail('');
+          setTimeout(() => {
+              setMessage('');
+              setMessageColor('');
+          }, 5000);
+      }
+  })
+  .catch(error => {
+    if (error.response) {
+        // The request was made and the server responded with a status code
+        const { data, status } = error.response;
+        setMessage(data.message || 'Request failed. Please try again.');
+        setMessageColor(status === 200 || status === 201 ? 'green' : 'red');
+        setTimeout(() => {
+            setMessage('');
+            setMessageColor('');
+        }, 5000);
+    } else if (error.request) {
+        // The request was made but no response was received
+        setMessage('No response received from the server. Please try again later.');
+        setMessageColor('red');
+        setTimeout(() => {
+            setMessage('');
+            setMessageColor('');
+        }, 5000);
+    } else {
+        // Something happened in setting up the request that triggered an Error
+        // setMessage('An unexpected error occurred. Please try again.');
+        // setMessageColor('red');
+        setTimeout(() => {
+            setMessage('');
+            setMessageColor('');
+        }, 5000);
+    }
+  });
+    // await sendCode(email);
     setMessage(`A message to reset your password was sent to: ${email}`);
     setMessageColor('green');
     setShowCodeInput(true);
     setTimeRemaining(300); // Reset timer to 5 minutes
   };
 
+<<<<<<< HEAD
   const handleCodeSubmit = () => {
     if (code === generatedCode && timeRemaining > 0) {
       localStorage.setItem('forgotUserEmail', email)
       router.push('/ResetPassword');
     } else {
       setMessage('Invalid code or time expired. Please try again.');
+=======
+  const handleCodeSubmit = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/verify_reset_code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, code }),
+      });
+
+      const data = await response.json();
+      if (data.status === 200) {
+        localStorage.setItem('forgotUserEmail', email);
+        router.push('/ResetPassword');
+      } else {
+        setMessage('Invalid code or time expired. Please try again.');
+        setMessageColor('red');
+      }
+    } catch (error) {
+      console.error('An error occurred while verifying the code', error);
+      setMessage('An error occurred. Please try again.');
+>>>>>>> main
       setMessageColor('red');
     }
   };
 
   const handleResendCode = async () => {
-    const newGeneratedCode = Math.random().toString(36).substring(2, 10); // Generate a new 8-character random string
-    setGeneratedCode(newGeneratedCode);
-
-    // Send the new code via email
-    await sendCode(email, newGeneratedCode);
-
+    await sendCode(email);
     setMessage(`A new code was sent to: ${email}`);
     setMessageColor('green');
     setTimeRemaining(300); // Reset timer to 5 minutes
