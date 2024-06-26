@@ -4,7 +4,7 @@ class Config:
     PASSWORD_LENGTH = 10
     LAST_PASSWORDS_COUNT = 3
     LOGIN_ATTEMPTS_LIMIT = 3
-    DICTIONARY_WORDS = ['password', '123456', 'qwerty', 'abc123']  # Add more words as needed
+    DICTIONARY_WORDS = ['password1!', 'Aa1234567!', 'abcd12345!']
     CONTAIN_UPPERCASE = True
     CONTAIN_LOWERCASE = True
     CONTAIN_NUMERIC = True
