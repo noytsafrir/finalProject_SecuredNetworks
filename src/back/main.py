@@ -1,22 +1,29 @@
 from flask import Flask, request, jsonify
-from models import db, Customer, User, PasswordHistory
+from models import db, Customer, User, PasswordHistory, OTP
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user
 from flask_cors import CORS
 from config import Config
 from validator import *
-import re
-import random
-import string
-import requests
+import re, random, string, requests, enc
 
+
+def check_user(email):
+    user = User.query.filter_by(email=email).first()
+    return user is not None
+
+def check_password(user, password):
+    return user.check_password(password)
+
+def password_configuration(password): #פונקציה שנוי ושיר צריכות לעדכן 
+    # Example password configuration check
+    return len(password) >= 8  # Add more checks as needed
+ 
 app = Flask(__name__)
 app.config.from_object(Config)
 CORS(app)
 db.init_app(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
-
-reset_codes = {}
 
 mock_users_db = {
     'user@example.com': 'password123',
@@ -37,7 +44,7 @@ def password_configuration(email,password):
         is_password_new(email, password) == False):
         return False
     return True
-
+#-------------------------------------------------New Password-------------------------------------------------
 @app.route('/new_password', methods=['POST'])
 def new_password():
     data = request.get_json()
@@ -53,12 +60,12 @@ def new_password():
 
     user.set_password(new_password)
     user.reset_login_attempts()
-    new_password_history = PasswordHistory(email=email)
-    new_password_history.set_password(user.password_hash)
+    new_password_history = PasswordHistory(email=email, password_hash=user.password_hash)
     db.session.add(new_password_history)
     db.session.commit()
     return jsonify({'message': 'Password updated successfully', 'status': 200})
-
+#-------------------------------------------------End New Password-------------------------------------------------
+#-------------------------------------------------Add Customer-------------------------------------------------
 @app.route('/add_customer', methods=['POST'])
 def add_customer():
     data = request.get_json()
@@ -74,17 +81,7 @@ def add_customer():
     db.session.add(new_customer)
     db.session.commit()
     return jsonify({'message': 'New Customer was added successfully: ' + customer_name, 'status': 200})
-
-@app.route('/verify_reset_code', methods=['POST'])
-def verify_reset_code():
-    data = request.get_json()
-    email = data.get('email')
-    code = data.get('code')
-
-    if reset_codes.get(email) == code:
-        return jsonify({'message': 'Code verified', 'status': 200})
-    else:
-        return jsonify({'message': 'Invalid code or expired', 'status': 400})
+#-------------------------------------------------End Add Customer-------------------------------------------------
 #-------------------------------------------------Login-------------------------------------------------
 @app.route('/login', methods=['POST'])
 def login():
@@ -121,8 +118,7 @@ def register():
     new_user = User(email=email)
     new_user.set_password(password)
     db.session.add(new_user)
-    new_password_history = PasswordHistory(email=email)
-    new_password_history.set_password(new_user.password_hash)
+    new_password_history = PasswordHistory(email=email, password_hash=new_user.password_hash)
     db.session.add(new_password_history)
     db.session.commit()
     return jsonify({'message': 'User registered successfully', 'status': 200})
@@ -132,17 +128,21 @@ def register():
 def forgot_password():
     data = request.get_json()
     email = data.get('email')
-
     user = User.query.filter_by(email=email).first()
     if not user:
         return jsonify({'message': 'User not found', 'status': 404})
-
-    reset_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-    reset_codes[email] = reset_code
-    print(f"Reset code: {reset_code}")  # Debugging statement
+    user_otp = OTP.query.filter_by(email=email).first()
+    if user_otp is None:
+        user_otp = OTP(email=email, secret_key=enc.generate_secret_key())
+        db.session.add(user_otp)
+    else:
+        user_otp.secret_key = enc.generate_secret_key()
+    db.session.commit()
+    otp = enc.generate_otp(user_otp.secret_key)
+    print(f"### OTP for {email}: {otp}") # TODO Debugging statement
 
     try:
-        response = requests.post('http://localhost:3000/api/send-code', json={'email': email, 'code': reset_code})
+        response = requests.post('http://localhost:3000/api/send-code', json={'email': email, 'code': otp})
         print(f"Response from email service: {response.status_code}, {response.json()}")  # Debugging statement
         if response.status_code == 200 and response.json().get('success'):
             return jsonify({'message': 'Password reset code sent', 'status': 200})
@@ -151,6 +151,23 @@ def forgot_password():
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({'message': 'An error occurred', 'status': 500})
+#-------------------------------------------------End Forgot Password-------------------------------------------------
+#-------------------------------------------------Verify Reset Code-------------------------------------------------
+@app.route('/verify_reset_code', methods=['POST'])
+def verify_reset_code():
+    data = request.get_json()
+    email = data.get('email')
+    code = data.get('code')
+
+    user_otp = OTP.query.filter_by(email=email).first()
+    if user_otp is None:
+        return jsonify({'message': 'User not found', 'status': 404})
+    secret_key = user_otp.secret_key
+    if enc.verify_otp(secret_key, code):
+        return jsonify({'message': 'Code verified', 'status': 200})
+    else:
+        return jsonify({'message': 'Invalid code or expired', 'status': 400})
+#-------------------------------------------------End Verify Reset Code-------------------------------------------------
 #-------------------------------------------------Update Password-------------------------------------------------
 @app.route('/update_password', methods=['POST'])
 def update_password():
@@ -171,8 +188,7 @@ def update_password():
 
     try:
         user.set_password(new_password)
-        new_password_history = PasswordHistory(email=email)
-        new_password_history.set_password(user.password_hash)
+        new_password_history = PasswordHistory(email=email, password_hash=user.password_hash)
         db.session.add(new_password_history)
         db.session.commit()
         return jsonify({'message': 'Password updated successfully', 'status': 200})
@@ -180,7 +196,6 @@ def update_password():
         db.session.rollback()
         return jsonify({'message': f'An error occurred: {str(e)}', 'status': 500})
 #-------------------------------------------------End Update Password-------------------------------------------------
-
 #---------------------------------------------------Get Customers-----------------------------------------------------
 @app.route('/get_customers', methods=['GET'])
 def get_customers():
