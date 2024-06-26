@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from models import db, Customer, User, PasswordHistory
+from models import db, Customer, User, PasswordHistory, OTP
 # from flask_login import LoginManager, UserMixin, login_user, login_required, current_user
 from flask_cors import CORS
 from config import Config
