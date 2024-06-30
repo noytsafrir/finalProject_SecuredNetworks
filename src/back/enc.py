@@ -2,7 +2,7 @@ import hashlib, binascii, os, pyotp
 
 user_otps = {}
 OTP_INTERVAL = 300 # otp lifetime is 5 min
-__totp = pyotp.TOTP("os.getenv('SECRET_KEY')", interval=OTP_INTERVAL)
+__totp = pyotp.TOTP(os.getenv('SECRET_KEY'), interval=OTP_INTERVAL)
 
 def hash_password(password):
     """Hash a password for storing."""
