@@ -24,8 +24,6 @@ const ForgotPassword = () => {
   }, [showCodeInput, timeRemaining]);
 
   const handleForgotPassword = async () => {
-    console.log("Arrived to handleForgotPassword");
-    console.log("email is: " + email);
     if (!email) {
       setMessage('Email is required to reset your password.');
       setMessageColor('red');
@@ -96,9 +94,6 @@ const ForgotPassword = () => {
       });
 
       const data = await response.json();
-      console.log("Verified reset code, data is: " + data);
-      console.log("Verified reset code, data is: " + data.status);
-      console.log("Verified reset code, data is: " + data.message);
       if (data.status === 200) {
         localStorage.setItem('forgotUserEmail', email);
         router.push('/ResetPassword');
