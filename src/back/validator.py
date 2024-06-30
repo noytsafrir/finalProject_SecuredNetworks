@@ -3,6 +3,7 @@ from config import Config
 from werkzeug.security import generate_password_hash, check_password_hash
 from passlib.hash import pbkdf2_sha256
 from models import PasswordHistory
+import enc
 # pip install Werkzeug
 
 
@@ -38,6 +39,8 @@ def is_password_new(email, password):
         for record in password_history
     ]
     for password_record in history_list:
-        if(pbkdf2_sha256.verify(password, password_record)):
+        print(f"Old password: {password_record}")
+        print(f"New password: {password}")
+        if(enc.verify_password(password, password_record)):
             return False
     return True

@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from models import db, Customer, User, PasswordHistory
+from models import db, Customer, User, PasswordHistory, OTP
 # from flask_login import LoginManager, UserMixin, login_user, login_required, current_user
 from flask_cors import CORS
 from config import Config
@@ -74,7 +74,7 @@ def add_customer():
     address = data.get('address')
 
     existing_customer = Customer.query.filter_by(customer_name=customer_name, company_name=company_name).first()
-    if existing_customer:
+    if existing_customer is not None:
         return jsonify({'message': 'Customer already exists', 'status': 400})
 
     new_customer = Customer(customer_name=customer_name, company_name=company_name, address=address)
@@ -129,7 +129,7 @@ def forgot_password():
     data = request.get_json()
     email = data.get('email')
     user = User.query.filter_by(email=email).first()
-    if not user:
+    if user == None:
         return jsonify({'message': 'User not found', 'status': 404})
     user_otp = OTP.query.filter_by(email=email).first()
     if user_otp is None:
