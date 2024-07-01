@@ -80,7 +80,7 @@ def add_customer():
     new_customer = Customer(customer_name=customer_name, company_name=company_name, address=address)
     db.session.add(new_customer)
     db.session.commit()
-    return jsonify({'message': 'New Customer was added successfully: ' + customer_name, 'status': 200})
+    return jsonify({'message': 'New Customer was added successfully:', 'status': 200})
 #-------------------------------------------------End Add Customer-------------------------------------------------
 #-------------------------------------------------Login-------------------------------------------------
 @app.route('/login', methods=['POST'])

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from "@/styles/RequestForm.module.css";
 import axios from 'axios';
+import { useRouter } from 'next/router';
 
 const AddCustomerForm = () => {
   const [customerName, setCustomerName] = useState('');
@@ -9,6 +10,11 @@ const AddCustomerForm = () => {
   const [message, setMessage] = useState('');
   const [messageColor, setMessageColor] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [newCustomerName, setNewCustomerName] = useState('');
+  // Read SAFE_MODE from environment variable
+  const safeModeEnv = process.env.NEXT_PUBLIC_SAFE_MODE === 'true';
+  const [SAFE_MODE, setSafeMode] = useState(safeModeEnv);
+
 
   useEffect(() => {
     const loggedInUserEmail = localStorage.getItem('loggedInUserEmail');
@@ -25,6 +31,16 @@ const AddCustomerForm = () => {
     }
     return () => clearTimeout(timer);
   }, [message]);
+
+  useEffect(() => {
+    let timer;
+    if (newCustomerName) {
+      timer = setTimeout(() => {
+        setNewCustomerName('');
+      }, 5000);
+    }
+    return () => clearTimeout(timer);
+  }, [newCustomerName]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -47,6 +63,7 @@ const AddCustomerForm = () => {
       setMessage(message);
       setMessageColor(status === 200 ? 'green' : 'red');
       if (status === 200) {
+        setNewCustomerName(customerName);
         setCustomerName('');
         setCompanyName('');
         setCustomerAddress('');
@@ -71,14 +88,15 @@ const AddCustomerForm = () => {
       return false;
     }
 
-    // Basic SQL injection prevention
-    const regex = /^[a-zA-Z0-9\s,.']+$/;
-    if (!regex.test(customerName) || !regex.test(companyName) || !regex.test(customerAddress)) {
-      setMessage('Invalid characters in input fields.');
-      setMessageColor('red');
-      return false;
+    if (SAFE_MODE) {
+      // Basic SQL injection prevention
+      const regex = /^[a-zA-Z0-9\s,.']+$/;
+      if (!regex.test(customerName) || !regex.test(companyName) || !regex.test(customerAddress)) {
+        setMessage('Invalid characters in input fields.');
+        setMessageColor('red');
+        return false;
+      }
     }
-
     return true;
   };
 
@@ -118,6 +136,13 @@ const AddCustomerForm = () => {
             <button type="submit" className={styles.button}>Add a Customer</button>
             <br /><br />
             {message && <p style={{ color: messageColor }}>{message}</p>}
+            {newCustomerName && (
+              SAFE_MODE ? (
+                <p style={{ color: "green"}}>{newCustomerName}</p>
+              ) : (
+                <div dangerouslySetInnerHTML={{ __html: newCustomerName }} />
+              )
+            )}
           </form>
         </>
       ) : (
