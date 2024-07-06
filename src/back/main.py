@@ -14,7 +14,7 @@ app.config.from_object(Config)
 CORS(app)
 db.init_app(app)
 load_dotenv()
-safe_mode = os.getenv('SAFE_MODE')
+safe_mode = os.getenv('SAFE_MODE') == 'true'
 
 def check_user(email):
     user = User.query.filter_by(email=email).first()
@@ -193,18 +193,51 @@ def update_password():
 #---------------------------------------------------Get Customers-----------------------------------------------------
 @app.route('/get_customers', methods=['GET'])
 def get_customers():
-    customers = Customer.query.all()
-    customers_list = [
-        {
-            'customer_name': customer.customer_name,
-            'company_name': customer.company_name,
-            'address': customer.address
-        }
-        for customer in customers
-    ]
-    return jsonify(customers_list)
+    search_field = request.args.get('searchField')
+    search_type = request.args.get('searchType')
+    search_data = request.args.get('searchData')
+
+    if (safe_mode):
+        query = Customer.query
+        if search_field and search_type and search_data:
+            if search_type == 'contains':
+                query = query.filter(getattr(Customer, search_field).like(f'%{search_data}%'))
+            elif search_type == 'equals':
+                query = query.filter(getattr(Customer, search_field) == search_data)
+        result = query.all()
+        customers = [
+            {
+                'customer_name': customer.customer_name,
+                'company_name': customer.company_name,
+                'address': customer.address
+            }
+            for customer in result
+        ]
+    else:
+        if not search_field or not search_type or not search_data:
+            query = text("SELECT customer_name, company_name, address FROM customers")
+            result = db.session.execute(query)
+        else:
+            if search_type == 'contains':
+                query = text(f"SELECT customer_name, company_name, address FROM customers WHERE {search_field} LIKE '%{search_data}%'")
+                result = db.session.execute(query)
+            elif search_type == 'equals':
+                query = text(f"SELECT customer_name, company_name, address FROM customers WHERE {search_field} = '{search_data}'")
+                result = db.session.execute(query)
+        customers = [
+            {
+                'customer_name': row[0],
+                'company_name': row[1],
+                'address': row[2]
+            }
+            for row in result
+        ]
+    print(query) # Debugging statement
+  
+    return jsonify(customers)
 
 #-------------------------------------------------End Get Customers-------------------------------------------------
+
 
 if __name__ == '__main__':
     with app.app_context():
