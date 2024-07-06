@@ -28,25 +28,27 @@ const Login = () => {
             return;
         }
 
-        const emailPattern = /^[^\s@]+@[^\s@]+\.(com|org)$/;
-        if (!emailPattern.test(email)) {
-            setMessage('Invalid email format. Please use a valid email ending with .com or .org.');
-            setMessageColor('red');
-            setTimeout(() => {
-                setMessage('');
-                setMessageColor('');
-            }, 5000);
-            return;
+        if (process.env.SAFE_MODE) {
+            const emailPattern = /^[^\s@]+@[^\s@]+\.(com|org)$/;
+            if (!emailPattern.test(email)) {
+                setMessage('Invalid email format. Please use a valid email ending with .com or .org.');
+                setMessageColor('red');
+                setTimeout(() => {
+                    setMessage('');
+                    setMessageColor('');
+                }, 5000);
+                return;
+            }
         }
 
         axios.post('http://localhost:5000/login', { email, password })
         .then(response => {
-            const { message, status } = response.data;
+            const { message, status, user_email } = response.data;
             setMessage(message);
             setMessageColor(status === 200 ? 'green' : 'red');
             if (status === 200) {
                 // Navigate to the next page upon successful login
-                localStorage.setItem('loggedInUserEmail', email);
+                localStorage.setItem('loggedInUserEmail', user_email);
                 setIsLoggedIn(true);
                 router.push('/about');
             }

@@ -5,30 +5,16 @@ from flask_cors import CORS
 from config import Config
 from validator import *
 import re, random, string, requests, enc
+from sqlalchemy import text
+import os
+from dotenv import load_dotenv
 
-
-def check_user(email):
-    user = User.query.filter_by(email=email).first()
-    return user is not None
-
-def check_password(user, password):
-    return user.check_password(password)
-
-def password_configuration(password): #פונקציה שנוי ושיר צריכות לעדכן 
-    # Example password configuration check
-    return len(password) >= 8  # Add more checks as needed
- 
 app = Flask(__name__)
 app.config.from_object(Config)
 CORS(app)
 db.init_app(app)
-# login_manager = LoginManager(app)
-# login_manager.login_view = 'login'
-
-mock_users_db = {
-    'user@example.com': 'password123',
-    'admin@example.com': 'adminpass'
-}
+load_dotenv()
+safe_mode = os.getenv('SAFE_MODE')
 
 def check_user(email):
     user = User.query.filter_by(email=email).first()
@@ -89,13 +75,21 @@ def login():
     email = data.get('email')
     password = data.get('password')
 
-    user = User.query.filter_by(email=email).first()
+    if (safe_mode):
+        user = User.query.filter_by(email=email).first()
+    else:
+        query = text(f"SELECT * FROM users WHERE email = '{email}'")
+        result = db.session.execute(query).first()
+        if result is None:
+            return jsonify({'message': 'User not found.', 'status': 401})
+        user = User(email=result.email, password_hash=result.password_hash, login_attempts=result.login_attempts) 
+
     if not user:
         return jsonify({'message': 'User not found.', 'status': 401})
     if user.login_attempts < Config.LOGIN_ATTEMPTS_LIMIT: 
         if user.check_password(password):
             user.reset_login_attempts()
-            return jsonify({'message': 'Login successful!', 'status': 200})
+            return jsonify({'message': 'Login successful!', 'status': 200, 'user_email': user.email})
         else:
             user.increment_login_attempts()
             return jsonify({'message': 'Invalid password.', 'status': 401})
