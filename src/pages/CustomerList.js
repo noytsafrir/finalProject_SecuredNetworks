@@ -5,7 +5,6 @@ import styles from "@/styles/CustomerList.module.css";
 
 const CustomerList = () => {
     const [customers, setCustomers] = useState([]);
-    const [filteredCustomers, setFilteredCustomers] = useState([]);
     const [searchField, setSearchField] = useState('customer_name');
     const [searchType, setSearchType] = useState('contains');
     const [searchData, setSearchData] = useState('');
@@ -32,19 +31,22 @@ const CustomerList = () => {
 
     useEffect(() => {
         if (!isLoggedIn) {
-            // setMessage('Please log in to view customers.');
-            // setMessageColor('red');
             return;
         } else {
             fetchCustomers();
         }
-    }, [isLoggedIn]);
+    }, [isLoggedIn, searchField, searchType, searchData]);
 
     const fetchCustomers = async () => {
         try {
-            const response = await axios.get('http://127.0.0.1:5000/get_customers');
+            const response = await axios.get('http://127.0.0.1:5000/get_customers', {
+                params: {
+                    searchField: searchField,
+                    searchType: searchType,
+                    searchData: searchData,
+                },
+            });
             setCustomers(response.data);
-            setFilteredCustomers(response.data);
         } catch (error) {
             console.error('Error fetching customers:', error);
             setMessage('Error fetching customers. Please try again.');
@@ -52,23 +54,9 @@ const CustomerList = () => {
         }
     };
 
-    const handleSearch = () => {
-        let filtered = customers;
-        if (searchType === 'contains') {
-            filtered = customers.filter(customer =>
-                customer[searchField].includes(searchData)
-            );
-        } else if (searchType === 'equals') {
-            filtered = customers.filter(customer =>
-                customer[searchField] === searchData
-            );
-        }
-        setFilteredCustomers(filtered);
-    };
-
     const handleClear = () => {
         setSearchData('');
-        setFilteredCustomers(customers);
+        fetchCustomers();
     };
 
     return (
@@ -104,7 +92,6 @@ const CustomerList = () => {
                             placeholder="Enter search data"
                             className={styles.searchInput}
                         />
-                        <button onClick={handleSearch} className={styles.searchButton}>Search</button>
                         <button onClick={handleClear} className={styles.searchButton}>Clear</button>
                     </div>
                     <table className={styles.table}>
@@ -116,7 +103,7 @@ const CustomerList = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredCustomers.map((customer, index) => (
+                            {customers.map((customer, index) => (
                                 <tr key={index}>
                                     <td className={styles.tableContent}>{customer.customer_name}</td>
                                     <td className={styles.tableContent}>{customer.company_name}</td>
