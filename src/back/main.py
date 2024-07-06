@@ -8,6 +8,7 @@ import re, random, string, requests, enc
 from sqlalchemy import text
 import os
 from dotenv import load_dotenv
+import mysql.connector
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -102,9 +103,40 @@ def register():
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
-
-    if check_user(email):
-        return jsonify({'message': 'User already exists', 'status' : 400})
+    if safe_mode:
+        if check_user(email):
+            return jsonify({'message': 'User already exists', 'status' : 400})
+    else:  
+        try:
+            # Database connection setup
+            unsecuredConnection = mysql.connector.connect(
+                host='localhost',
+                user='root',
+                password='A123456',
+                database='store'
+            )
+            cursor = unsecuredConnection.cursor()
+            # Constructing a single query that includes a potential SQL injection
+            query = f"SELECT * FROM users WHERE email = '{email}';"
+            print(query)
+            # Executing the query with multi=True to allow multiple statements
+            for result in cursor.execute(query, multi=True):
+                if result.with_rows:
+                    res = result.fetchall()
+                    if res:
+                        return jsonify({'message': 'User already exists', 'status': 400})
+        except mysql.connector.ProgrammingError as e:
+            print(f"Error: {e}")
+            return jsonify({'message': 'SQL error', 'status': 500})
+        unsecuredConnection.commit()
+    print("First check") # Debugging statement
+        # query = text(f"SELECT * FROM users WHERE email = '{email}'")
+        # print(query)
+        # result = db.session.execute(query).first()
+        # print(result.email)
+        # if result is not None:
+        #     return jsonify({'message': 'User already exists', 'status' : 400})
+    
 
     if not password_configuration(email,password):
         return jsonify({'message': 'Password must be at least 10 characters long and include uppercase, lowercase, digits, and special characters, cant be a dictionary word', 'status': 400})
@@ -197,7 +229,7 @@ def get_customers():
     search_type = request.args.get('searchType')
     search_data = request.args.get('searchData')
 
-    if (safe_mode):
+    if safe_mode:
         query = Customer.query
         if search_field and search_type and search_data:
             if search_type == 'contains':

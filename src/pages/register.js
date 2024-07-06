@@ -9,6 +9,8 @@ const Register = () => {
     const [message, setMessage] = useState('');
     const [messageColor, setMessageColor] = useState('');
     const [isLoggedIn, setIsLoggedIn] = useState(false); // State to track login status
+    const safeModeEnv = process.env.NEXT_PUBLIC_SAFE_MODE === 'true';
+    const [SAFE_MODE, setSafeMode] = useState(safeModeEnv);
 
     useEffect(() => {
         // Check if user is already logged in
@@ -26,16 +28,17 @@ const Register = () => {
             }, 5000);
             return;
         }
-
-        const emailPattern = /^[^\s@]+@[^\s@]+\.(com|org)$/;
-        if (!emailPattern.test(email)) {
-            setMessage('Invalid email format. Please use a valid email ending with .com or .org.');
-            setMessageColor('red');
-            setTimeout(() => {
-                setMessage('');
-                setMessageColor('');
-            }, 5000);
-            return;
+        if (SAFE_MODE) {
+            const emailPattern = /^[^\s@]+@[^\s@]+\.(com|org)$/;
+            if (!emailPattern.test(email)) {
+                setMessage('Invalid email format. Please use a valid email ending with .com or .org.');
+                setMessageColor('red');
+                setTimeout(() => {
+                    setMessage('');
+                    setMessageColor('');
+                }, 5000);
+                return;
+            }
         }
 
         if (password !== repeatPassword) {
