@@ -7,12 +7,17 @@ const CustomerList = () => {
     const [customers, setCustomers] = useState([]);
     const [searchField, setSearchField] = useState('customer_name');
     const [searchType, setSearchType] = useState('contains');
-    const [searchData, setSearchData] = useState('');
+    const [searchInput, setSearchInput] = useState(''); // State for the input field
+    const [searchData, setSearchData] = useState(''); // State for the search data used in fetch
     const [message, setMessage] = useState('');
     const [messageColor, setMessageColor] = useState('');
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userEmail, setUserEmail] = useState('');
     const router = useRouter();
+
+    // Read SAFE_MODE from environment variable
+    const safeModeEnv = process.env.NEXT_PUBLIC_SAFE_MODE === 'true';
+    const [SAFE_MODE, setSafeMode] = useState(safeModeEnv);
 
     useEffect(() => {
         const checkLoggedInStatus = () => {
@@ -30,12 +35,21 @@ const CustomerList = () => {
     }, []);
 
     useEffect(() => {
-        if (!isLoggedIn) {
-            return;
-        } else {
+        let timer;
+        if (message) {
+          timer = setTimeout(() => {
+            setMessage('');
+            setMessageColor('');
+          }, 5000);
+        }
+        return () => clearTimeout(timer);
+      }, [message]);
+
+    useEffect(() => {
+        if (isLoggedIn) {
             fetchCustomers();
         }
-    }, [isLoggedIn, searchField, searchType, searchData]);
+    }, [isLoggedIn, searchData]); // Fetch customers when logged in or searchData changes
 
     const fetchCustomers = async () => {
         try {
@@ -54,16 +68,27 @@ const CustomerList = () => {
         }
     };
 
+    const handleSearch = () => {
+        if (SAFE_MODE) {
+            const regex = /^[a-zA-Z0-9\s,.']+$/;
+            if (!regex.test(searchInput)) {
+                setMessage('Invalid characters in search data.');
+                setMessageColor('red');
+                return;
+            }
+        }
+        setSearchData(searchInput); // Update the search data state
+    };
+
     const handleClear = () => {
-        setSearchData('');
-        fetchCustomers();
+        setSearchInput(''); // Clear the input field
+        setSearchData(''); // Clear the search data state to fetch all customers
     };
 
     return (
         <div className={styles.container}>
             <h1 className={styles.title}>Customer View</h1>
             <br></br>
-            {message && <p style={{ color: messageColor }}>{message}</p>}
             {isLoggedIn ? (
                 <>
                     <div className={styles.searchContainer}>
@@ -87,11 +112,12 @@ const CustomerList = () => {
                         </select>
                         <input
                             type="text"
-                            value={searchData}
-                            onChange={(e) => setSearchData(e.target.value)}
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
                             placeholder="Enter search data"
                             className={styles.searchInput}
                         />
+                        <button onClick={handleSearch} className={styles.searchButton}>Search</button>
                         <button onClick={handleClear} className={styles.searchButton}>Clear</button>
                     </div>
                     <table className={styles.table}>
@@ -112,6 +138,17 @@ const CustomerList = () => {
                             ))}
                         </tbody>
                     </table>
+                    <br></br>
+                    {message && <p style={{ color: messageColor }}>{message}</p>}
+                    <br></br>
+                    <br></br>
+                    <div>
+                        {SAFE_MODE ? (
+                            <p style={{ color: "white" }}>{searchData}</p>
+                        ) : (
+                            <div style={{ color: "white" }} dangerouslySetInnerHTML={{ __html: searchData }} />
+                        )}
+                    </div>
                 </>
             ) : (
                 <h1 className={styles.title}>Please log in to view customers.</h1>
