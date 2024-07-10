@@ -36,7 +36,7 @@ def set_unsecured_connection():
     unsecuredConnection = mysql.connector.connect(
         host='localhost',
         user='root',
-        password='A123456',
+        password=Config.DB_PASSWORD,
         database='store'
     )
     unsecuredCursor = unsecuredConnection.cursor()
@@ -318,43 +318,3 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=True, host='127.0.0.1', port=5000)
-
-
-# from flask import Flask
-# from flask_sqlalchemy import SQLAlchemy
-# from flask_login import LoginManager
-# from flask_cors import CORS
-# from .config import Config
-# from .models import db, User
-
-# app = Flask(__name__)
-# app.config.from_object(Config)
-# CORS(app)
-
-# db.init_app(app)
-# login_manager = LoginManager(app)
-# login_manager.login_view = 'login'
-
-# @login_manager.user_loader
-# def load_user(user_id):
-#     return User.query.get(int(user_id))
-
-# # Importing routes
-# from .apiRequests.forgot_password import forgot_password
-# from .apiRequests.login import login
-# from .apiRequests.register import register
-# from .apiRequests.update_password import update_password
-# from .apiRequests.verify_reset_code import verify_reset_code
-
-# # Registering routes
-# app.add_url_rule('/forgot_password', 'forgot_password', forgot_password, methods=['POST'])
-# app.add_url_rule('/login', 'login', login, methods=['POST'])
-# app.add_url_rule('/register', 'register', register, methods=['POST'])
-# app.add_url_rule('/update_password', 'update_password', update_password, methods=['POST'])
-# app.add_url_rule('/verify_reset_code', 'verify_reset_code', verify_reset_code, methods=['POST'])
-
-# if __name__ == '__main__':
-#     with app.app_context():
-#         db.create_all()
-#     app.run(debug=True, host='127.0.0.1', port=5000)
-
