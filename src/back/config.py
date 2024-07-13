@@ -1,5 +1,5 @@
 class Config:
-    DB_PASSWORD = "12345678" # TODO change to your root password 
+    DB_PASSWORD = "A123456" # TODO change to your root password 
     SQLALCHEMY_DATABASE_URI = f'mysql+pymysql://root:{DB_PASSWORD}@localhost/store'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     PASSWORD_LENGTH = 10
