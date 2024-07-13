@@ -140,7 +140,7 @@ const AddCustomerForm = () => {
               SAFE_MODE ? (
                 <p style={{ color: "green"}}>{newCustomerName}</p>
               ) : (
-                <div dangerouslySetInnerHTML={{ __html: newCustomerName }} />
+                <div style={{ color: "green"}} dangerouslySetInnerHTML={{ __html: newCustomerName }} />
               )
             )}
           </form>
