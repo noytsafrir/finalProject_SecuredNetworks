@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify
 from models import db, Customer, User, PasswordHistory, OTP
-# from flask_login import LoginManager, UserMixin, login_user, login_required, current_user
 from flask_cors import CORS
 from config import Config
 from validator import *
@@ -31,6 +30,22 @@ def password_configuration(email,password):
         is_password_new(email, password) == False):
         return False
     return True
+
+def set_unsecured_connection():
+    # Database connection setup
+    unsecuredConnection = mysql.connector.connect(
+        host='localhost',
+        user='root',
+        password=Config.DB_PASSWORD,
+        database='store'
+    )
+    unsecuredCursor = unsecuredConnection.cursor()
+    return unsecuredConnection, unsecuredCursor
+
+def close_unsecured_connection(cursor, connection):
+    connection.commit()
+    cursor.close()
+    connection.close()
 #-------------------------------------------------New Password-------------------------------------------------
 @app.route('/new_password', methods=['POST'])
 def new_password():
@@ -60,10 +75,34 @@ def add_customer():
     company_name = data.get('company_name')
     address = data.get('address')
 
-    existing_customer = Customer.query.filter_by(customer_name=customer_name, company_name=company_name).first()
-    if existing_customer is not None:
-        return jsonify({'message': 'Customer already exists', 'status': 400})
+    # safe mode
+    if safe_mode:
+        existing_customer = Customer.query.filter_by(customer_name=customer_name).first()
+        if existing_customer is not None:
+            return jsonify({'message': 'Customer already exists', 'status': 400})
 
+    # unsafe mode
+    else:
+        try:
+            # Database connection setup
+            unsecuredConnection, unsecuredCursor = set_unsecured_connection()
+            # Constructing a single query that includes a potential SQL injection
+            query = f"SELECT * FROM customers WHERE customer_name = '{customer_name}';"
+            print(query)    # Debugging statement
+            # Executing the query with multi=True to allow multiple statements
+            for result in unsecuredCursor.execute(query, multi=True):
+                if result.with_rows:
+                    res = result.fetchall()
+                    if res:
+                        close_unsecured_connection(unsecuredCursor, unsecuredConnection)
+                        return jsonify({'message': 'Customer already exists', 'status': 400})
+            close_unsecured_connection(unsecuredCursor, unsecuredConnection)
+        except mysql.connector.ProgrammingError as e:
+            print(f"Error: {e}")
+            return jsonify({'message': 'SQL error', 'status': 500})
+        
+    # safe mode & unsafe mode
+    # Add the new customer
     new_customer = Customer(customer_name=customer_name, company_name=company_name, address=address)
     db.session.add(new_customer)
     db.session.commit()
@@ -76,15 +115,27 @@ def login():
     email = data.get('email')
     password = data.get('password')
 
-    if (safe_mode):
+    user = None
+    if safe_mode:
         user = User.query.filter_by(email=email).first()
     else:
-        query = text(f"SELECT * FROM users WHERE email = '{email}'")
-        result = db.session.execute(query).first()
-        if result is None:
-            return jsonify({'message': 'User not found.', 'status': 401})
-        user = User(email=result.email, password_hash=result.password_hash, login_attempts=result.login_attempts) 
-
+        try:
+            # Database connection setup
+            unsecuredConnection, unsecuredCursor = set_unsecured_connection()
+            # Constructing a single query that includes a potential SQL injection
+            query = f"SELECT * FROM users WHERE email = '{email}'"
+            print(query)    # Debugging statement
+            # Executing the query with multi=True to allow multiple statements
+            for result in unsecuredCursor.execute(query, multi=True):
+                if result.with_rows:
+                    res = result.fetchone()
+                    if res:
+                        user = User(email=res[0], password_hash=res[1], login_attempts=res[2])
+            close_unsecured_connection(unsecuredCursor, unsecuredConnection)
+        except mysql.connector.ProgrammingError as e:
+            print(f"Error: {e}")
+            return jsonify({'message': 'SQL error', 'status': 500})
+    
     if not user:
         return jsonify({'message': 'User not found.', 'status': 401})
     if user.login_attempts < Config.LOGIN_ATTEMPTS_LIMIT: 
@@ -103,41 +154,30 @@ def register():
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
+    # safe mode
     if safe_mode:
         if check_user(email):
             return jsonify({'message': 'User already exists', 'status' : 400})
+    # unsafe mode
     else:  
         try:
             # Database connection setup
-            unsecuredConnection = mysql.connector.connect(
-                host='localhost',
-                user='root',
-                password='A123456',
-                database='store'
-            )
-            cursor = unsecuredConnection.cursor()
+            unsecuredConnection, unsecuredCursor = set_unsecured_connection()
             # Constructing a single query that includes a potential SQL injection
             query = f"SELECT * FROM users WHERE email = '{email}';"
-            print(query)
             # Executing the query with multi=True to allow multiple statements
-            for result in cursor.execute(query, multi=True):
+            for result in unsecuredCursor.execute(query, multi=True):
                 if result.with_rows:
                     res = result.fetchall()
                     if res:
+                        close_unsecured_connection(unsecuredCursor, unsecuredConnection)
                         return jsonify({'message': 'User already exists', 'status': 400})
+            close_unsecured_connection(unsecuredCursor, unsecuredConnection)
         except mysql.connector.ProgrammingError as e:
             print(f"Error: {e}")
             return jsonify({'message': 'SQL error', 'status': 500})
-        unsecuredConnection.commit()
-    print("First check") # Debugging statement
-        # query = text(f"SELECT * FROM users WHERE email = '{email}'")
-        # print(query)
-        # result = db.session.execute(query).first()
-        # print(result.email)
-        # if result is not None:
-        #     return jsonify({'message': 'User already exists', 'status' : 400})
-    
 
+    # safe mode    
     if not password_configuration(email,password):
         return jsonify({'message': 'Password must be at least 10 characters long and include uppercase, lowercase, digits, and special characters, cant be a dictionary word', 'status': 400})
 
@@ -248,13 +288,16 @@ def get_customers():
     else:
         if not search_field or not search_type or not search_data:
             query = text("SELECT customer_name, company_name, address FROM customers")
+            print(query)    # Debugging statement
             result = db.session.execute(query)
         else:
             if search_type == 'contains':
                 query = text(f"SELECT customer_name, company_name, address FROM customers WHERE {search_field} LIKE '%{search_data}%'")
+                print(query)    # Debugging statement
                 result = db.session.execute(query)
             elif search_type == 'equals':
                 query = text(f"SELECT customer_name, company_name, address FROM customers WHERE {search_field} = '{search_data}'")
+                print(query)    # Debugging statement
                 result = db.session.execute(query)
         customers = [
             {
@@ -275,43 +318,3 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=True, host='127.0.0.1', port=5000)
-
-
-# from flask import Flask
-# from flask_sqlalchemy import SQLAlchemy
-# from flask_login import LoginManager
-# from flask_cors import CORS
-# from .config import Config
-# from .models import db, User
-
-# app = Flask(__name__)
-# app.config.from_object(Config)
-# CORS(app)
-
-# db.init_app(app)
-# login_manager = LoginManager(app)
-# login_manager.login_view = 'login'
-
-# @login_manager.user_loader
-# def load_user(user_id):
-#     return User.query.get(int(user_id))
-
-# # Importing routes
-# from .apiRequests.forgot_password import forgot_password
-# from .apiRequests.login import login
-# from .apiRequests.register import register
-# from .apiRequests.update_password import update_password
-# from .apiRequests.verify_reset_code import verify_reset_code
-
-# # Registering routes
-# app.add_url_rule('/forgot_password', 'forgot_password', forgot_password, methods=['POST'])
-# app.add_url_rule('/login', 'login', login, methods=['POST'])
-# app.add_url_rule('/register', 'register', register, methods=['POST'])
-# app.add_url_rule('/update_password', 'update_password', update_password, methods=['POST'])
-# app.add_url_rule('/verify_reset_code', 'verify_reset_code', verify_reset_code, methods=['POST'])
-
-# if __name__ == '__main__':
-#     with app.app_context():
-#         db.create_all()
-#     app.run(debug=True, host='127.0.0.1', port=5000)
-
