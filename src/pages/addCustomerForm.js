@@ -82,8 +82,8 @@ const AddCustomerForm = () => {
       return false;
     }
 
-    if (customerName.length < 5 || companyName.length < 5 || customerAddress.length < 5) {
-      setMessage('All fields must be at least 5 characters long.');
+    if (customerName.length < 2 || companyName.length < 2 || customerAddress.length < 2) {
+      setMessage('All fields must be at least 2 characters long.');
       setMessageColor('red');
       return false;
     }
