@@ -39,6 +39,6 @@ def is_password_new(email, password):
         for record in password_history
     ]
     for password_record in history_list:
-        if(enc.verify_password(password, password_record)):
+        if(enc.verify_password(password_record, password)):
             return False
     return True
