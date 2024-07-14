@@ -21,17 +21,19 @@ def add_customer():
     # unsafe mode
     else:
         try:
+            existing_customer = False
             # Database connection setup
             unsecuredConnection, unsecuredCursor = set_unsecured_connection()
             query = f"SELECT * FROM customers WHERE customer_name = '{customer_name}';"
             # Executing the query with multi=True to allow multiple statements
             for result in unsecuredCursor.execute(query, multi=True):
                 if result.with_rows:
-                    res = result.fetchall()
+                    res = result.fetchone()
                     if res:
-                        close_unsecured_connection(unsecuredCursor, unsecuredConnection)
-                        return jsonify({'message': 'Customer already exists', 'status': 400})
+                        existing_customer = True
             close_unsecured_connection(unsecuredCursor, unsecuredConnection)
+            if existing_customer:
+                return jsonify({'message': 'Customer already exists', 'status': 400})
         except mysql.connector.ProgrammingError as e:
             print(f"Error: {e}")
             return jsonify({'message': 'SQL error', 'status': 500})

@@ -17,6 +17,7 @@ def register():
     # unsafe mode
     else:  
         try:
+            existing_user = False
             # Database connection setup
             unsecuredConnection, unsecuredCursor = set_unsecured_connection()
             # Constructing a single query that includes a potential SQL injection
@@ -26,9 +27,10 @@ def register():
                 if result.with_rows:
                     res = result.fetchall()
                     if res:
-                        close_unsecured_connection(unsecuredCursor, unsecuredConnection)
-                        return jsonify({'message': 'User already exists', 'status': 400})
+                        existing_user = True
             close_unsecured_connection(unsecuredCursor, unsecuredConnection)
+            if existing_user:
+                return jsonify({'message': 'User already exists', 'status': 400})
         except mysql.connector.ProgrammingError as e:
             print(f"Error: {e}")
             return jsonify({'message': 'SQL error', 'status': 500})
