@@ -36,6 +36,7 @@ def get_customers():
                 query = text(f"SELECT customer_name, company_name, address FROM customers WHERE {search_field} LIKE '%{search_data}%'")
             elif search_type == 'equals':
                 query = text(f"SELECT customer_name, company_name, address FROM customers WHERE {search_field} = '{search_data}'")
+        result = db.session.execute(query)
         customers = [
             {
                 'customer_name': row[0],
@@ -44,7 +45,5 @@ def get_customers():
             }
             for row in result
         ]
-        result = db.session.execute(query)
-
   
     return jsonify(customers)
