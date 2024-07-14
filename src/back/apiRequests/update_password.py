@@ -11,7 +11,6 @@ def update_password():
     old_password = data.get('old_password')
     new_password = data.get('new_password')
 
-    print(f"Email: {email}, Old Password: {old_password}, New Password: {new_password}")
     user = User.query.filter_by(email=email).first()
     if not user:
         return jsonify({'message': 'User not found', 'status': 404})

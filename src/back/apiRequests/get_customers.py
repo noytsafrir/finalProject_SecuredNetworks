@@ -28,19 +28,14 @@ def get_customers():
             for customer in result
         ]
     else:
+        query = None
         if not search_field or not search_type or not search_data:
             query = text("SELECT customer_name, company_name, address FROM customers")
-            print(query)    # Debugging statement
-            result = db.session.execute(query)
         else:
             if search_type == 'contains':
                 query = text(f"SELECT customer_name, company_name, address FROM customers WHERE {search_field} LIKE '%{search_data}%'")
-                print(query)    # Debugging statement
-                result = db.session.execute(query)
             elif search_type == 'equals':
                 query = text(f"SELECT customer_name, company_name, address FROM customers WHERE {search_field} = '{search_data}'")
-                print(query)    # Debugging statement
-                result = db.session.execute(query)
         customers = [
             {
                 'customer_name': row[0],
@@ -49,6 +44,7 @@ def get_customers():
             }
             for row in result
         ]
-    print(query) # Debugging statement
+        result = db.session.execute(query)
+
   
     return jsonify(customers)

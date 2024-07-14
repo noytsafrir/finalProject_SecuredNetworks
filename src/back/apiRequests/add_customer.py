@@ -23,9 +23,7 @@ def add_customer():
         try:
             # Database connection setup
             unsecuredConnection, unsecuredCursor = set_unsecured_connection()
-            # Constructing a single query that includes a potential SQL injection
             query = f"SELECT * FROM customers WHERE customer_name = '{customer_name}';"
-            print(query)    # Debugging statement
             # Executing the query with multi=True to allow multiple statements
             for result in unsecuredCursor.execute(query, multi=True):
                 if result.with_rows:

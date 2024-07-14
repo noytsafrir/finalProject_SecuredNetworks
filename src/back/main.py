@@ -12,13 +12,10 @@ from apiRequests.register import register_bp
 from apiRequests.update_password import update_password_bp
 from apiRequests.verify_reset_code import verify_reset_code_bp
 
-
 app = Flask(__name__)
 app.config.from_object(Config)
 CORS(app)
 db.init_app(app)
-
-
 
 # Register blueprints
 app.register_blueprint(add_customer_bp)
@@ -29,7 +26,6 @@ app.register_blueprint(new_password_bp)
 app.register_blueprint(register_bp)
 app.register_blueprint(update_password_bp)
 app.register_blueprint(verify_reset_code_bp)
-
 
 if __name__ == '__main__':
     with app.app_context():
