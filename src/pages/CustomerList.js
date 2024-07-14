@@ -78,6 +78,7 @@ const CustomerList = () => {
             }
         }
         setSearchData(searchInput); // Update the search data state
+        fetchCustomers(); // Fetch customers based on the search data
     };
 
     const handleClear = () => {

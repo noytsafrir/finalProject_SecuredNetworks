@@ -1,33 +1,31 @@
-from flask import request, jsonify
-from flask_login import login_required, current_user
-from ..models import db
-from ..validator import is_password_complex, is_dictionary_word
+from flask import Blueprint, request, jsonify
+from models import db, User, PasswordHistory
+from myfunc import *
 
-@login_required
+update_password_bp = Blueprint('update_password_bp', __name__)
+
+@update_password_bp.route('/update_password', methods=['POST'])
 def update_password():
     data = request.get_json()
-    old_password = data.get('oldPassword')
-    new_password = data.get('newPassword')
+    email = data.get('email')
+    old_password = data.get('old_password')
+    new_password = data.get('new_password')
 
-    user = current_user
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({'message': 'User not found', 'status': 404})
+
     if not user.check_password(old_password):
-        user.login_attempts += 1
+        return jsonify({'message': 'Old password is incorrect', 'status': 400})
+    if not password_configuration(email,new_password):
+        return jsonify({'message': 'Password does not meet configuration requirements', 'status': 400})
+
+    try:
+        user.set_password(new_password)
+        new_password_history = PasswordHistory(email=email, password_hash=user.password_hash)
+        db.session.add(new_password_history)
         db.session.commit()
-        if user.login_attempts >= 3:  # limit
-            return jsonify({'message': 'Too many login attempts. Account locked.', 'status': 403}), 403
-        return jsonify({'message': 'Old password is incorrect', 'status': 400}), 400
-
-    if not is_password_complex(new_password):
-        return jsonify({'message': 'Password must be at least 10 characters long and include uppercase, lowercase, digits, and special characters', 'status': 400}), 400
-
-    if is_dictionary_word(new_password):
-        return jsonify({'message': 'Password cannot be a dictionary word', 'status': 400}), 400
-
-    if any(user.check_password(pwd) for pwd in user.old_passwords):
-        return jsonify({'message': 'Password has been used recently. Please choose a different password.', 'status': 400}), 400
-
-    user.set_password(new_password)
-    user.login_attempts = 0
-    db.session.commit()
-
-    return jsonify({'message': 'Password updated successfully', 'status': 200})
+        return jsonify({'message': 'Password updated successfully', 'status': 200})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'An error occurred: {str(e)}', 'status': 500})
