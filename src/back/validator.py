@@ -32,13 +32,12 @@ def is_password_new(email, password):
     num_passwords = Config.LAST_PASSWORDS_COUNT
     if not email or not num_passwords:
         return False
-
     password_history = PasswordHistory.query.filter_by(email=email).order_by(PasswordHistory.timestamp.desc()).limit(num_passwords).all()
     history_list = [
         record.password_hash
         for record in password_history
-    ]
+    ] 
     for password_record in history_list:
-        if(enc.verify_password(password, password_record)):
+        if(enc.verify_password(password_record, password)):
             return False
     return True
