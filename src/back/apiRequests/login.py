@@ -1,19 +1,44 @@
-from flask import request, jsonify
-from flask_login import login_user
-from ..models import User
+import mysql.connector
+from flask import Blueprint, request, jsonify
+from models import User
+from config import Config
+from myfunc import *
 
+login_bp = Blueprint('login_bp', __name__)
+
+@login_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
 
-    user = User.query.filter_by(email=email).first()
+    user = None
+    if safe_mode:
+        user = User.query.filter_by(email=email).first()
+    else:
+        try:
+            # Database connection setup
+            unsecuredConnection, unsecuredCursor = set_unsecured_connection()
+            query = f"SELECT * FROM users WHERE email = '{email}'"
+            # Executing the query with multi=True to allow multiple statements
+            for result in unsecuredCursor.execute(query, multi=True):
+                if result.with_rows:
+                    res = result.fetchone()
+                    if res:
+                        user = User(email=res[0], password_hash=res[1], login_attempts=res[2])
+            close_unsecured_connection(unsecuredCursor, unsecuredConnection)
+        except mysql.connector.ProgrammingError as e:
+            print(f"Error: {e}")
+            return jsonify({'message': 'SQL error', 'status': 500})
+    
     if not user:
         return jsonify({'message': 'User not found.', 'status': 401})
-
-    if user.check_password(password):
-        # login_user(user)
-        return jsonify({'message': 'Login successful!', 'status': 200})
+    if user.login_attempts < Config.LOGIN_ATTEMPTS_LIMIT: 
+        if user.check_password(password):
+            user.reset_login_attempts()
+            return jsonify({'message': 'Login successful!', 'status': 200, 'user_email': user.email})
+        else:
+            user.increment_login_attempts()
+            return jsonify({'message': 'Invalid password.', 'status': 401})
     else:
-        return jsonify({'message': 'Invalid password.', 'status': 401})
-    
+        return jsonify({'message': 'Account locked.', 'status': 401})
